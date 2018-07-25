@@ -1,6 +1,12 @@
 module Api
 	module V1
 		class BooksController < ApplicationController
+			rescue_from ActiveRecord::RecordNotFound, :with => :render_404
+
+			def render_404
+		    render json: { message: "Couldn't find book"}, status: :not_found
+		  end
+
 			def index
 				books = Book.order('created_at DESC')
 				render json: {status: 'SUCCESS', message: 'Loaded Books.!!', data: books}, status: :ok
@@ -15,7 +21,7 @@ module Api
 				book = Book.new(book_params)
 
 				if book.save
-					render json: {status: 'SUCCESS', message: 'Book Saved Successfully', data: book}, status: :ok
+					render json: {status: 'SUCCESS', message: 'Book Saved Successfully', data: book}, status: :created
 				else
 					render json: {status: 'ERROR', message: 'Book not saved', data: book.errors}, status: :unprocessable_entity
 				end
@@ -23,8 +29,7 @@ module Api
 
 			def destroy
 				book = Book.find(params[:id])
-				book.destroy
-				render json: {status: 'SUCCESS', message: 'Deleted Book Successfully', data: book}, status: :ok
+				head :no_content
 			end
 
 			def update
